@@ -14,3 +14,6 @@ Details requirements:
 5. Scripts should be executable on a server running SELINUX in enforcing mode, and firewalld enabled
 
 6. Make sure server and other web server configs are hardened security wise.
+
+How to run the playbook:
+ansible-playbook -i hosts.txt main.yml --ask-pass --ask-sudo-pass
