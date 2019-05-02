@@ -1,2 +1,2 @@
 [all]
-blue.coder.com
+host1.example.com
