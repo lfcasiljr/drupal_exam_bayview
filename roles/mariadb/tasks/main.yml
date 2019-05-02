@@ -1,0 +1,57 @@
+---
+  - name: Install Mariadb server locally
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      - mariadb-server
+      - mariadb
+      
+  - name: Start and enable Mariadb server
+    service:
+      name: mariadb
+      state: started
+      enabled: yes
+      
+  - name: Install the Python MySQL Support Libraries
+    yum: 
+      name: MySQL-python 
+      state: latest
+   
+  - name: Update mysql root password
+    mysql_user:
+      name: root
+      host: "{{ item }}"
+      password: "{{ mysql_root_password }}"
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      check_implicit_admin: yes
+      priv: "*.*:ALL,GRANT"
+    with_items:
+       - "{{ inventory_hostname }}"
+       - 127.0.0.1
+       - ::1
+       - localhost
+
+  - name: Create Drupal database
+    mysql_db:
+      name: "{{ mysql_drupal_dbname }}"
+      collation: utf8mb4_general_ci
+      encoding: utf8mb4
+      login_user: root 
+      login_password: "{{ mysql_root_password }}"
+      state: present
+     
+  - name: Create user drupal with priv in drupal db
+    mysql_user:
+      name: "{{ mysql_drupal_user }}"
+      host: "{{ item }}"
+      password: "{{ mysql_drupal_password }}"
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      priv: "drupal.*:ALL,GRANT"
+    with_items:
+       - "{{ inventory_hostname }}"
+       - 127.0.0.1
+       - ::1
+       - localhost

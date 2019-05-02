@@ -1,0 +1,4 @@
+mysql_root_password: passwd
+mysql_drupal_dbname: drupal
+mysql_drupal_user: drupal
+mysql_drupal_password: drupalpass

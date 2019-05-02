@@ -1,0 +1,70 @@
+---
+  - name: download file drupal-8.2.4.tar.gz in drupal root directory
+    get_url:
+      url: https://ftp.drupal.org/files/projects/drupal-8.2.4.tar.gz 
+      dest: /var/www/drupal-8.2.4.tar.gz
+       
+  - name: Extract drupal-8.2.4.tar.gz in /var/www/drupal8
+    unarchive:
+      src: /var/www/drupal8/drupal-8.2.4.tar.gz
+      dest: /var/www/
+
+  - name: Checking if /var/www/drupal-8.2.4 is exist
+    stat:
+      path: /var/www/drupal-8.2.4 
+    register: stat_result
+
+  - name: Renaming var/www/drupal-8.2.4 to /var/www/drupal8 directory
+    command: mv /var/www/drupal-8.2.4 /var/www/drupal8
+    when: stat_result.stat.exists
+    ignore_errors: yes    
+ 
+  - name: Checking if /var/www/drupal8 is exist
+    stat:
+      path: /var/www/drupal8
+    register: checkdir_result
+  
+  - name: Create drupal settings.php services.yml
+    copy: src={{ item.src }} dest={{ item.dest}}
+    with_items:
+      - { src: '/var/www/drupal8/sites/default/default.settings.php', dest: '/var/www/drupal8/sites/default/settings.php', mode: 0666 }
+      - { src: '/var/www/drupal8/sites/default/default.services.yml', dest: '/var/www/drupal8/sites/default/services.yml', mode: 0666  }
+    when: checkdir_result.stat.exists    
+
+  - name: Change mode file settings.php
+    file:
+      path: /var/www/drupal8/sites/default/settings.php
+      mode: 0666
+
+  - name: Create directory drupal sites/default/files
+    file:
+      path: /var/www/drupal8/sites/default/files
+      mode: a+w
+      state: directory
+   
+  - name: Create directory /etc/nginx/ssl
+    file:
+      path: /etc/nginx/ssl
+      state: directory
+  
+  - name: Upload nginx drupal.conf and ssl files
+    template: src={{item.src}} dest={{item.dest}} 
+    with_items:
+      - { src: 'drupal.crt', dest: '/etc/nginx/ssl/drupal.crt' }
+      - { src: 'drupal.key', dest: '/etc/nginx/ssl/drupal.key' }
+      - { src: 'drupal.conf', dest: '/etc/nginx/conf.d/drupal.conf' }
+      
+  - name: Update servername in drupal.conf
+    replace:
+      path: /etc/nginx/conf.d/drupal.conf
+      regexp: 'test.example.com'
+      replace: '{{ inventory_hostname }}'
+
+  - name: Set chcon in drupal8 directory
+    shell: chcon -R -t httpd_sys_content_rw_t /var/www/drupal8
+    ignore_errors: yes
+ 
+  - name: Restart nginx service
+    service:
+      name: nginx
+      state: restarted

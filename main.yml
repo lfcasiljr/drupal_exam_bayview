@@ -1,0 +1,9 @@
+- hosts: all
+  user: lorenz
+  become: yes
+  gather_facts: yes
+  roles:
+     - { role: nginx-php-fpm }
+     - { role: mariadb }
+     - { role: drupal }
+     - { role: firewall }

@@ -1,0 +1,18 @@
+---
+  - name: Update firewalld add http
+    firewalld:
+      zone: public
+      permanent: yes
+      service: http
+      state: enabled
+          
+  - name: Update firewalld add https
+    firewalld:
+      zone: public
+      permanent: yes
+      service: https
+      state: enabled
+
+  - name: Reload firewald
+    command: firewall-cmd --reload
+    ignore_errors: yes
